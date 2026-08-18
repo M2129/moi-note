@@ -1,45 +1,62 @@
 <?php
 
+namespace GestionNotePooV2\Core;
+
+
+
 class Database
 {
-    private static ?PDO $connexion = null;
 
-    private function __construct()
+    /**
+     * Private constructor to prevent direct instantiation.
+     * This class uses static methods only.
+     */
+    private function __construct(){}
+
+    private static function getInstance(): \PDO | null
     {
-        // Singleton pattern: prevent direct instantiation
+        try {
+            $instance = null;
+            $dsn = "pgsql:host=localhost;dbname=gestion_note_v2";
+            $username = $_ENV['DB_USER'] ?? 'postgres';
+            $password = $_ENV['DB_PASSWORD'] ?? '';
+            $instance = new \PDO($dsn, $username, $password);
+            $instance->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            return $instance;
+        } catch (\PDOException $e) {
+            error_log("Connexion PostgreSQL échouée : " . $e->getMessage());
+            return null;
+        }
     }
 
-    public static function getConnexion(): PDO
+    public static function query(string $sql, bool $single = true): mixed
     {
-        if (self::$connexion === null) {
+        $query = self::getInstance()->query($sql);
+        return $single ? $query->fetch() : $query->fetchAll(\PDO::FETCH_OBJ);
+    }
 
-            $dsn = "pgsql:host=127.0.0.1;port=5432;dbname=gestion_ecole";
+    private static function prepare(string $sql, array $datas): \PDOStatement
+    {
+        $prepare = Database::getInstance()->prepare($sql);
+        $prepare->execute($datas);
+        return $prepare;
+    }
 
-            try {
-                self::$connexion = new PDO(
-                    $dsn,
-                    'postgres',
-                    ''
-                );
+    public static function executeQuery(string $sql, array $datas, bool $single = true): mixed
+    {
+        $statement = self::prepare($sql, $datas);
+        return $single ? $statement->fetch() : $statement->fetchAll(\PDO::FETCH_OBJ);
+    }
 
-                self::$connexion->setAttribute(
-                    PDO::ATTR_ERRMODE,
-                    PDO::ERRMODE_EXCEPTION
-                );
+    public static function executeUpdate(string $sql, array $datas): int|string
+    {
+        $statement = self::prepare($sql, $datas);
+        return (str_starts_with(strtoupper(trim($sql)), 'INSERT')) ? self::getInstance()->lastInsertId() : $statement->rowCount();
+    }
 
-                self::$connexion->setAttribute(
-                    PDO::ATTR_DEFAULT_FETCH_MODE,
-                    PDO::FETCH_ASSOC
-                );
-
-            } catch (PDOException $e) {
-                die(
-                    "Erreur de connexion : "
-                    . $e->getMessage()
-                );
-            }
-        }
-
-        return self::$connexion;
+    public static function getAllData(string $tableName): array
+    {
+        $sql = "SELECT * FROM $tableName";
+        return self::query($sql, false);
     }
 }

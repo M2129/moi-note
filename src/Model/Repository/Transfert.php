@@ -1,27 +1,30 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class Transfert
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Transfert;
+
+class TransfertRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
         $sql = "
-            SELECT t.id_transfert, t.type_transfert, t.etablissement_origine, t.etablissement_destination, t.date_transfert, t.motif,
-                    e.matricule, e.nom, e.prenom
-            FROM transfert t
-            JOIN inscription i
-                ON i.id_inscription = t.inscription_id
-            JOIN eleve e
-                ON e.id_eleve = i.eleve_id
+            SELECT t.id, t.type_transfert, t.etablissement_origine, t.etablissement_destination, t.date_transfert, t.motif,
+                    e.matricule, e.nomcomplet
+            FROM transferts t
+            JOIN inscriptions i
+                ON i.id = t.id_inscription
+            JOIN eleves e
+                ON e.id = i.id_eleve
             ORDER BY t.date_transfert DESC
         ";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, [], false);
+        $transferts = [];
+        foreach ($resultats as $resultat) {
+            $transferts[] = Transfert::toEntity($resultat);
+        }
+        return $transferts;
     }
 }

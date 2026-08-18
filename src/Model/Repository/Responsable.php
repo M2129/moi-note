@@ -1,38 +1,37 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class Responsable
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Responsable;
+
+class ResponsableRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
-            FROM responsable
-            ORDER BY nom, prenom
-        ");
+            FROM responsables
+            ORDER BY nomcomplet
+        ";
 
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, [], false);
+        $responsables = [];
+        foreach ($resultats as $resultat) {
+            $responsables[] = Responsable::toEntity($resultat);
+        }
+        return $responsables;
     }
 
-    public static function findById(int $id): array|false
+    public static function findById(int $id): Responsable|null
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
-            FROM responsable
-            WHERE id_responsable = :id
-        ");
+            FROM responsables
+            WHERE id = :id
+        ";
 
-        $stmt->execute([
-            'id' => $id
-        ]);
-
-        return $stmt->fetch();
+        $resultat = Database::executeQuery($sql, ['id' => $id], true);
+        return $resultat ? Responsable::toEntity($resultat) : null;
     }
 }

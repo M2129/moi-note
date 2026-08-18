@@ -1,41 +1,41 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class Classe
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Classe;
+
+class ClasseRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
         $sql = "
-            SELECT c.id_classe, c.nom, c.niveau, c.etablissement_id, e.nom AS etablissement
-            FROM classe c
-            JOIN etablissement e
-                ON e.id_etablissement = c.etablissement_id
+            SELECT c.id, c.nom, c.niveau, c.id_etablissement, e.nom AS nometablissement
+            FROM classes c
+            JOIN etablissements e
+                ON e.id = c.id_etablissement
             ORDER BY c.nom
         ";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, [], false);
+        $classes = [];
+        foreach ($resultats as $resultat) {
+            $classes[] = Classe::toEntity($resultat);
+        }
+        return $classes;
     }
 
-    public static function findById(int $id): array|false
+    public static function findById(int $id): Classe|null
     {
-        $pdo = Database::getConnexion();
+        $sql = "
+            SELECT c.id, c.nom, c.niveau, c.id_etablissement, e.nom AS nometablissement
+            FROM classes c
+            JOIN etablissements e
+                ON e.id = c.id_etablissement
+            WHERE c.id = :id
+        ";
 
-        $stmt = $pdo->prepare("
-            SELECT *
-            FROM classe
-            WHERE id_classe = :id
-        ");
-
-        $stmt->execute([
-            'id' => $id
-        ]);
-
-        return $stmt->fetch();
+        $resultat = Database::executeQuery($sql, ['id' => $id], true);
+        return $resultat ? Classe::toEntity($resultat) : null;
     }
 }

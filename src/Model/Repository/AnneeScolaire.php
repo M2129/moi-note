@@ -1,37 +1,38 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class AnneeScolaire
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Annescolaire;
+
+class AnneeScolaireRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
             FROM annee_scolaire
             ORDER BY date_debut DESC
-        ");
+        ";
 
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, [], false);
+        $annees = [];
+        foreach ($resultats as $resultat) {
+            $annees[] = Annescolaire::toEntity($resultat);
+        }
+        return $annees;
     }
 
-    public static function active(): array|false
+    public static function active(): Annescolaire|null
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
             FROM annee_scolaire
             WHERE actif = TRUE
             LIMIT 1
-        ");
+        ";
 
-        $stmt->execute();
-
-        return $stmt->fetch();
+        $resultat = Database::executeQuery($sql, [], true);
+        return $resultat ? Annescolaire::toEntity($resultat) : null;
     }
 }
