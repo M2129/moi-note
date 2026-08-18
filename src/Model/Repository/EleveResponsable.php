@@ -1,27 +1,27 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class EleveResponsable
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Responsable;
+
+class EleveResponsableRepository
 {
     public static function findByEleve(int $eleveId): array
     {
-        $pdo = Database::getConnexion();
-
         $sql = "
-            SELECT r.id_responsable, r.nom, r.prenom, r.telephone, r.adresse, er.lien
+            SELECT r.id, r.nomcomplet, r.numero
             FROM eleve_responsable er
-            JOIN responsable r
-                ON r.id_responsable = er.responsable_id
-            WHERE er.eleve_id = :eleve_id
+            JOIN responsables r
+                ON r.id = er.id_responsable
+            WHERE er.id_eleve = :eleve_id
         ";
 
-        $stmt = $pdo->prepare($sql);
-
-        $stmt->execute([
-            'eleve_id' => $eleveId
-        ]);
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, ['eleve_id' => $eleveId], false);
+        $responsables = [];
+        foreach ($resultats as $resultat) {
+            $responsables[] = Responsable::toEntity($resultat);
+        }
+        return $responsables;
     }
 }

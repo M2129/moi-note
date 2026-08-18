@@ -2,7 +2,7 @@
 
 namespace GestionNotePooV2\Entity;
 
-class Etablissement
+class Role
 {
     private int $id;
     private string $nom;
@@ -17,7 +17,7 @@ class Etablissement
         return $this->id;
     }
 
-    public function getAnnee(): string
+    public function getnom(): string
     {
         return $this->nom;
     }
@@ -32,8 +32,8 @@ class Etablissement
         $this->nom = $nom;
     }
 
-    public static function toEntity(\stdClass $obj): Etablissement
+    public static function toEntity(\stdClass $obj): self
     {
-        return new Etablissement(nom: $obj->nometablissement);
+        return new self(nom: $obj->nom_role);
     }
 }

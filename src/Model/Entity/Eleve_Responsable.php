@@ -1,5 +1,10 @@
 <?php
 
+namespace GestionNotePooV2\Entity;
+
+use GestionNotePooV2\Entity\Eleve;
+use GestionNotePooV2\Entity\Responsable;
+
 class EleveResponsable
 {
     private Eleve $eleve;

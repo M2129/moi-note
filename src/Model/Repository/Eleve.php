@@ -1,95 +1,81 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class Eleve
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Eleve;
+
+class EleveRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
         $sql = "
-            SELECT e.id_eleve, e.matricule, e.nom, e.prenom, e.date_naissance, e.sexe
-            FROM eleve e
-            ORDER BY e.nom, e.prenom
+            SELECT e.id, e.nomcomplet, e.matricule, e.date_naissance, r.id as responsable_id, r.nomcomplet as responsable_nom, r.numero
+            FROM eleves e
+            JOIN responsables r ON r.id = e.id_responsable
+            ORDER BY e.nomcomplet
         ";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, [], false);
+        $eleves = [];
+        foreach ($resultats as $resultat) {
+            $eleves[] = Eleve::toEntity($resultat);
+        }
+        return $eleves;
     }
 
-    public static function findById(int $id): array|false
+    public static function findById(int $id): Eleve|null
     {
-        $pdo = Database::getConnexion();
-
         $sql = "
-            SELECT *
-            FROM eleve
-            WHERE id_eleve = :id
+            SELECT e.id, e.nomcomplet, e.matricule, e.date_naissance, r.id as responsable_id, r.nomcomplet as responsable_nom, r.numero
+            FROM eleves e
+            JOIN responsables r ON r.id = e.id_responsable
+            WHERE e.id = :id
         ";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'id' => $id
-        ]);
-
-        return $stmt->fetch();
+        $resultat = Database::executeQuery($sql, ['id' => $id], true);
+        return $resultat ? Eleve::toEntity($resultat) : null;
     }
 
-    public static function findByMatricule(string $matricule): array|false
+    public static function findByMatricule(string $matricule): Eleve|null
     {
-        $pdo = Database::getConnexion();
-
         $sql = "
-            SELECT *
-            FROM eleve
-            WHERE matricule = :matricule
+            SELECT e.id, e.nomcomplet, e.matricule, e.date_naissance, r.id as responsable_id, r.nomcomplet as responsable_nom, r.numero
+            FROM eleves e
+            JOIN responsables r ON r.id = e.id_responsable
+            WHERE e.matricule = :matricule
         ";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            'matricule' => $matricule
-        ]);
-
-        return $stmt->fetch();
+        $resultat = Database::executeQuery($sql, ['matricule' => $matricule], true);
+        return $resultat ? Eleve::toEntity($resultat) : null;
     }
 
     public static function create(
+        string $nomcomplet,
         string $matricule,
-        string $nom,
-        string $prenom,
         string $dateNaissance,
-        string $sexe
-    ): bool {
-        $pdo = Database::getConnexion();
-
+        int $idResponsable
+    ): int|string {
         $sql = "
-            INSERT INTO eleve (
+            INSERT INTO eleves (
+                nomcomplet,
                 matricule,
-                nom,
-                prenom,
                 date_naissance,
-                sexe
+                id_responsable
             )
             VALUES (
+                :nomcomplet,
                 :matricule,
-                :nom,
-                :prenom,
                 :date_naissance,
-                :sexe
+                :id_responsable
             )
         ";
 
-        $stmt = $pdo->prepare($sql);
-
-        return $stmt->execute([
+        return Database::executeUpdate($sql, [
+            'nomcomplet' => $nomcomplet,
             'matricule' => $matricule,
-            'nom' => $nom,
-            'prenom' => $prenom,
             'date_naissance' => $dateNaissance,
-            'sexe' => $sexe
+            'id_responsable' => $idResponsable
         ]);
     }
 }

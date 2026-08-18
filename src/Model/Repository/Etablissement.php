@@ -1,38 +1,37 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class Etablissement
+use GestionNotePooV2\Core\Database;
+use GestionNotePooV2\Entity\Etablissement;
+
+class EtablissementRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
-            FROM etablissement
+            FROM etablissements
             ORDER BY nom
-        ");
+        ";
 
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        $resultats = Database::executeQuery($sql, [], false);
+        $etablissements = [];
+        foreach ($resultats as $resultat) {
+            $etablissements[] = Etablissement::toEntity($resultat);
+        }
+        return $etablissements;
     }
 
-    public static function findById(int $id): array|false
+    public static function findById(int $id): Etablissement|null
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
-            FROM etablissement
-            WHERE id_etablissement = :id
-        ");
+            FROM etablissements
+            WHERE id = :id
+        ";
 
-        $stmt->execute([
-            'id' => $id
-        ]);
-
-        return $stmt->fetch();
+        $resultat = Database::executeQuery($sql, ['id' => $id], true);
+        return $resultat ? Etablissement::toEntity($resultat) : null;
     }
 }

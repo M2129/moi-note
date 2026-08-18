@@ -1,21 +1,19 @@
 <?php
 
-require_once __DIR__ . '/../Core/Database.php';
+namespace GestionNotePooV2\Repository;
 
-class StatutInscription
+use GestionNotePooV2\Core\Database;
+
+class StatutInscriptionRepository
 {
     public static function findAll(): array
     {
-        $pdo = Database::getConnexion();
-
-        $stmt = $pdo->prepare("
+        $sql = "
             SELECT *
             FROM statut_inscription
             ORDER BY libelle
-        ");
+        ";
 
-        $stmt->execute();
-
-        return $stmt->fetchAll();
+        return Database::executeQuery($sql, [], false);
     }
 }
